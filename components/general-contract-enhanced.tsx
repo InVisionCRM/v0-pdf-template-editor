@@ -1,16 +1,14 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import React, { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import SignatureCanvas from "./signature-canvas"
-import InitialsCanvas from "./initials-canvas"
-import { FileIcon, CheckCircle } from "lucide-react"
+import { FileIcon, CheckCircle, Edit3Icon } from "lucide-react"
 import Link from "next/link"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import LoadingAnimation from "./loading-animation"
 import AddressAutocomplete from "./address-autocomplete"
+import AdoptSignatureDialog from "./adopt-signature-dialog"
 
 export default function GeneralContractEnhanced() {
   // Format current date as MM/DD/YYYY
@@ -39,6 +37,9 @@ export default function GeneralContractEnhanced() {
   const [masterInitials, setMasterInitials] = useState<string>("")
   const [hasSetupSignature, setHasSetupSignature] = useState(false)
 
+  // State to control the AdoptSignatureDialog visibility
+  const [isAdoptSignatureDialogOpen, setIsAdoptSignatureDialogOpen] = useState(false);
+
   // Set the current date when component mounts
   useEffect(() => {
     const currentDate = formatDate()
@@ -53,16 +54,22 @@ export default function GeneralContractEnhanced() {
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
-  const handleSignatureSetup = (signature: string) => {
-    setMasterSignature(signature)
-  }
-
-  const handleInitialsSetup = (initials: string) => {
-    setMasterInitials(initials)
-    if (initials && masterSignature) {
-      setHasSetupSignature(true)
+  // Effect to update hasSetupSignature based on masterSignature and masterInitials
+  useEffect(() => {
+    if (masterSignature && masterInitials && masterSignature !== "data:," && masterInitials !== "data:,") {
+      setHasSetupSignature(true);
+    } else {
+      setHasSetupSignature(false);
     }
-  }
+  }, [masterSignature, masterInitials]);
+
+  const handleAdoptSignature = (signature: string, initials?: string) => {
+    setMasterSignature(signature);
+    if (initials) {
+      setMasterInitials(initials);
+    }
+    setIsAdoptSignatureDialogOpen(false); // Close the dialog
+  };
 
   const applySignature = (field: string) => {
     if (masterSignature) {
@@ -131,12 +138,10 @@ export default function GeneralContractEnhanced() {
 
         // Capture the page as an image
         const canvas = await html2canvas(page, {
-          scale: 2,
+          scale: 0.75,
           useCORS: true,
           logging: false,
           backgroundColor: "#ffffff",
-          // Add these options to improve text rendering
-          letterRendering: true,
           allowTaint: true,
           height: page.scrollHeight + 20, // Add extra height to prevent cutoff
           onclone: (clonedDoc) => {
@@ -173,11 +178,10 @@ export default function GeneralContractEnhanced() {
 
         // Capture the final paragraphs section
         const finalCanvas = await html2canvas(finalParagraphsElement as HTMLElement, {
-          scale: 2,
+          scale: 0.5,
           useCORS: true,
           logging: false,
           backgroundColor: "#ffffff",
-          letterRendering: true,
           allowTaint: true,
           height: finalParagraphsElement.scrollHeight + 20,
         })
@@ -194,7 +198,7 @@ export default function GeneralContractEnhanced() {
       document.body.removeChild(fixedContainer)
 
       // Save the PDF
-      doc.save("General-Contract.pdf")
+      doc.save("General-Contract-Enhanced.pdf")
     } catch (error) {
       console.error("Error generating PDF:", error)
       alert("Failed to generate PDF. Please try again.")
@@ -217,32 +221,41 @@ export default function GeneralContractEnhanced() {
         </Button>
       </div>
 
-      {/* Signature Setup Section */}
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle>Setup Your Signature & Initials</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="masterSignature">Your Signature (sign once)</Label>
-            <SignatureCanvas value={masterSignature} onChange={handleSignatureSetup} />
+      {/* Button to open the AdoptSignatureDialog */}
+      <div className="mb-8 p-6 border border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-center">
+        {!hasSetupSignature ? (
+          <React.Fragment>
+            <Edit3Icon className="h-12 w-12 text-gray-400 mb-3" />
+            <h3 className="text-lg font-medium text-gray-700 mb-1">Setup Your Signature & Initials</h3>
+            <p className="text-sm text-gray-500 mb-4">
+              Click the button below to draw or type your signature and initials.
+            </p>
+            <Button onClick={() => setIsAdoptSignatureDialogOpen(true)} className="bg-blue-600 hover:bg-blue-700 text-white">
+              Setup Signature & Initials
+            </Button>
+          </React.Fragment>
+        ) : (
+          <div className="flex flex-col items-center text-center">
+            <CheckCircle className="h-12 w-12 text-green-500 mb-3" />
+            <h3 className="text-lg font-medium text-gray-700 mb-1">Signature & Initials Setup Complete!</h3>
+            <p className="text-sm text-gray-500 mb-4">
+              Your signature and initials are ready. You can click on any signature or initial field in the contract to apply them, or update them if needed.
+            </p>
+            <Button onClick={() => setIsAdoptSignatureDialogOpen(true)} variant="outline">
+              Update Signature/Initials
+            </Button>
           </div>
+        )}
+      </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="masterInitials">Your Initials (write once)</Label>
-            <InitialsCanvas value={masterInitials} onChange={handleInitialsSetup} />
-          </div>
-
-          {hasSetupSignature && (
-            <div className="flex items-center text-green-600">
-              <CheckCircle className="h-5 w-5 mr-2" />
-              <span>
-                Signature and initials ready! Click on any signature or initial field in the contract to apply.
-              </span>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <AdoptSignatureDialog
+        open={isAdoptSignatureDialogOpen}
+        onOpenChange={setIsAdoptSignatureDialogOpen}
+        onAdopt={handleAdoptSignature}
+        initialSignature={masterSignature}
+        initialInitials={masterInitials}
+        needsInitials={true} // This contract uses both
+      />
 
       <div ref={contractRef} className="space-y-8">
         {/* Page 1 */}
@@ -315,9 +328,6 @@ export default function GeneralContractEnhanced() {
               />
             </div>
           </div>
-
-          {/* Rest of the contract content remains the same */}
-          {/* ... */}
 
           <div className="text-sm mb-6">
             <p>

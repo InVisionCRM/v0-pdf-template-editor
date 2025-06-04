@@ -1,15 +1,22 @@
-"use client"
+"use client";
+import React from 'react';
 
 import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import SignatureCanvas from "./signature-canvas"
-import InitialsCanvas from "./initials-canvas"
-import { FileIcon, CheckCircle } from "lucide-react"
+// SignatureCanvas and InitialsCanvas are now used by AdoptSignatureDialog
+// import SignatureCanvas from "./signature-canvas"
+// import InitialsCanvas from "./initials-canvas"
+import { FileIcon, CheckCircle, Edit3Icon } from "lucide-react" // Added Edit3Icon for setup button
 import Link from "next/link"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
+// Card components are used by AdoptSignatureDialog, but keep Card for other uses if any.
+// For now, assuming Card, CardHeader, CardTitle, CardContent are not needed directly here for signature setup.
+import { Label } from "@/components/ui/label" // Label might still be used elsewhere or by AdoptSignatureDialog indirectly
 import LoadingAnimation from "./loading-animation"
+// Stage, Layer, Text, Konva are used by AdoptSignatureDialog
+// import { Stage, Layer, Text } from "react-konva"
+// import Konva from "konva"
+import AdoptSignatureDialog from "./adopt-signature-dialog"; // Import the new dialog
 
 export default function GeneralContract() {
   // Format current date as MM/DD/YYYY
@@ -38,6 +45,18 @@ export default function GeneralContract() {
   const [masterInitials, setMasterInitials] = useState<string>("")
   const [hasSetupSignature, setHasSetupSignature] = useState(false)
 
+  // State to control the AdoptSignatureDialog visibility
+  const [isAdoptSignatureDialogOpen, setIsAdoptSignatureDialogOpen] = useState(false);
+
+  // Removed states related to direct signature mode and typed inputs, as they are in AdoptSignatureDialog
+  // const [signatureMode, setSignatureMode] = useState<"draw" | "type">("draw")
+  // const [typedFullName, setTypedFullName] = useState<string>("")
+  // const [typedInitials, setTypedInitials] = useState<string>("")
+
+  // Removed refs for Konva stages, as they are in AdoptSignatureDialog
+  // const signatureStageRef = useRef<Konva.Stage>(null)
+  // const initialsStageRef = useRef<Konva.Stage>(null)
+
   // Set the current date when component mounts
   useEffect(() => {
     const currentDate = formatDate()
@@ -52,16 +71,30 @@ export default function GeneralContract() {
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
-  const handleSignatureSetup = (signature: string) => {
-    setMasterSignature(signature)
-  }
+  // These handlers are now part of AdoptSignatureDialog or triggered by its onAdopt
+  // const handleSignatureSetup = (signature: string) => { ... }
+  // const handleInitialsSetup = (initials: string) => { ... }
 
-  const handleInitialsSetup = (initials: string) => {
-    setMasterInitials(initials)
-    if (initials && masterSignature) {
-      setHasSetupSignature(true)
+  // useEffects for updating masterSignature/Initials from typed inputs are moved to AdoptSignatureDialog
+
+  // Effect to update hasSetupSignature based on masterSignature and masterInitials
+  useEffect(() => {
+    if (masterSignature && masterInitials) {
+      setHasSetupSignature(true);
+    } else {
+      setHasSetupSignature(false);
     }
-  }
+  }, [masterSignature, masterInitials]);
+
+  const handleAdoptSignature = (signature: string, initials?: string) => {
+    setMasterSignature(signature);
+    if (initials) {
+      setMasterInitials(initials);
+    }
+    // hasSetupSignature will be updated by the useEffect above
+    setIsAdoptSignatureDialogOpen(false); // Close the dialog
+  };
+
 
   const applySignature = (field: string) => {
     if (masterSignature) {
@@ -130,12 +163,10 @@ export default function GeneralContract() {
 
         // Capture the page as an image
         const canvas = await html2canvas(page, {
-          scale: 2,
+          scale: 0.75,
           useCORS: true,
           logging: false,
           backgroundColor: "#ffffff",
-          // Add these options to improve text rendering
-          letterRendering: true,
           allowTaint: true,
           height: page.scrollHeight + 20, // Add extra height to prevent cutoff
           onclone: (clonedDoc) => {
@@ -172,11 +203,10 @@ export default function GeneralContract() {
 
         // Capture the final paragraphs section
         const finalCanvas = await html2canvas(finalParagraphsElement as HTMLElement, {
-          scale: 2,
+          scale: 0.75,
           useCORS: true,
           logging: false,
           backgroundColor: "#ffffff",
-          letterRendering: true,
           allowTaint: true,
           height: finalParagraphsElement.scrollHeight + 20,
         })
@@ -216,55 +246,54 @@ export default function GeneralContract() {
         </Button>
       </div>
 
-      {/* Signature Setup Section */}
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle>Setup Your Signature & Initials</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="masterSignature">Your Signature (sign once)</Label>
-            <SignatureCanvas value={masterSignature} onChange={handleSignatureSetup} />
+      {/* Button to open the AdoptSignatureDialog */}
+      <div className="mb-8 p-6 border border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-center">
+        {!hasSetupSignature ? (
+          <React.Fragment>
+            <Edit3Icon className="h-12 w-12 text-gray-400 mb-3" />
+            <h3 className="text-lg font-medium text-gray-700 mb-1">Setup Your Signature & Initials</h3>
+            <p className="text-sm text-gray-500 mb-4">
+              Click the button below to draw or type your signature and initials.
+            </p>
+            <Button onClick={() => setIsAdoptSignatureDialogOpen(true)} className="bg-blue-600 hover:bg-blue-700 text-white">
+              Setup Signature & Initials
+            </Button>
+          </React.Fragment>
+        ) : (
+          <div className="flex flex-col items-center text-center">
+            <CheckCircle className="h-12 w-12 text-green-500 mb-3" />
+            <h3 className="text-lg font-medium text-gray-700 mb-1">Signature & Initials Setup Complete!</h3>
+            <p className="text-sm text-gray-500 mb-4">
+              Your signature and initials are ready. You can click on any signature or initial field in the contract to apply them, or update them if needed.
+            </p>
+            <Button onClick={() => setIsAdoptSignatureDialogOpen(true)} variant="outline">
+              Update Signature/Initials
+            </Button>
           </div>
+        )}
+      </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="masterInitials">Your Initials (write once)</Label>
-            <InitialsCanvas value={masterInitials} onChange={handleInitialsSetup} />
-          </div>
+      <AdoptSignatureDialog
+        open={isAdoptSignatureDialogOpen}
+        onOpenChange={setIsAdoptSignatureDialogOpen}
+        onAdopt={handleAdoptSignature}
+        initialSignature={masterSignature}
+        initialInitials={masterInitials}
+        needsInitials={true} // This contract uses both
+      />
 
-          {hasSetupSignature && (
-            <div className="flex items-center text-green-600">
-              <CheckCircle className="h-5 w-5 mr-2" />
-              <span>
-                Signature and initials ready! Click on any signature or initial field in the contract to apply.
-              </span>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      {/* Removed the old Card-based signature setup section */}
+      {/* <Card className="mb-8 bg-gray-800 text-white"> ... </Card> */}
 
       <div ref={contractRef} className="space-y-8">
         {/* Page 1 */}
         <div className="contract-page pt-10 pb-6">
           <div className="text-center mb-4">
-            {/* BEFORE: CSS-based logo */}
-            {/* 
-    <div className="w-24 h-24 mx-auto mb-2 relative">
-      <div className="w-full h-full bg-lime-300 rotate-45 relative">
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-3/4 h-3/4 border-4 border-black border-t-0 border-r-0"></div>
-        </div>
-      </div>
-    </div>
-    */}
-
-            {/* AFTER: Image-based logo */}
             <img
               src="https://ehjgnin9yr7pmzsk.public.blob.vercel-storage.com/in-vision-logo-UJNZxvzrwPs8WsZrFbI7Z86L8TWcc5.png"
               alt="In-Vision Construction Logo"
               className="w-48 h-auto mx-auto mb-2"
             />
-
             <h1 className="text-xl font-bold">In-Vision Construction</h1>
             <p className="text-sm" style={{ textDecoration: "none", borderBottom: "none" }}>
               36712 Chatham Ct, Clinton Township, MI 48035
@@ -283,13 +312,13 @@ export default function GeneralContract() {
               <Input
                 className="border-b border-t-0 border-l-0 border-r-0 rounded-none flex-grow min-h-[28px] leading-relaxed py-1"
                 value={formData.name || ""}
-                onChange={(e) => handleInputChange("name", e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange("name", e.target.value)}
               />
               <span className="w-20 ml-4">Date:</span>
               <Input
                 className="border-b border-t-0 border-l-0 border-r-0 rounded-none flex-grow min-h-[28px] leading-relaxed py-1"
                 value={formData.date || ""}
-                onChange={(e) => handleInputChange("date", e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange("date", e.target.value)}
                 readOnly
               />
             </div>
@@ -298,7 +327,7 @@ export default function GeneralContract() {
               <Input
                 className="border-b border-t-0 border-l-0 border-r-0 rounded-none flex-grow min-h-[28px] leading-relaxed py-1"
                 value={formData.projectAddress || ""}
-                onChange={(e) => handleInputChange("projectAddress", e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange("projectAddress", e.target.value)}
               />
             </div>
             <div className="flex">
@@ -306,7 +335,7 @@ export default function GeneralContract() {
               <Input
                 className="border-b border-t-0 border-l-0 border-r-0 rounded-none flex-grow min-h-[28px] leading-relaxed py-1"
                 value={formData.billingAddress || ""}
-                onChange={(e) => handleInputChange("billingAddress", e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange("billingAddress", e.target.value)}
               />
             </div>
             <div className="flex">
@@ -314,13 +343,13 @@ export default function GeneralContract() {
               <Input
                 className="border-b border-t-0 border-l-0 border-r-0 rounded-none flex-grow min-h-[28px] leading-relaxed py-1"
                 value={formData.phone || ""}
-                onChange={(e) => handleInputChange("phone", e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange("phone", e.target.value)}
               />
               <span className="w-20 ml-4">Email:</span>
               <Input
                 className="border-b border-t-0 border-l-0 border-r-0 rounded-none flex-grow min-h-[28px] leading-relaxed py-1"
                 value={formData.email || ""}
-                onChange={(e) => handleInputChange("email", e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange("email", e.target.value)}
               />
             </div>
           </div>
@@ -479,7 +508,7 @@ export default function GeneralContract() {
                 <Input
                   className="w-64 border-b border-t-0 border-l-0 border-r-0 rounded-none min-h-[28px] leading-relaxed py-1"
                   value={formData.emailFacsimile || ""}
-                  onChange={(e) => handleInputChange("emailFacsimile", e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange("emailFacsimile", e.target.value)}
                 />
               </div>
               <div className="flex items-center">
@@ -640,8 +669,7 @@ export default function GeneralContract() {
               Owner's phone number regardless of whether the telephone number is on any federal state, local, or other
               do not call list; and, (v) certifies that it is an authorized user of any telephone numbers that provided
               to In-Vision Construction LLC. Home Owner acknowledges that consent to receive marketing, autodialed, and
-              prerecorded calls and texts is not required to purchase In-Vision Construction LLC's products or services.
-              Home Owner further acknowledges that its consent may be revoked by emailing
+              prerecorded calls and texts is not required to purchase In-Vision Construction LLC's products or services. Home Owner further acknowledges that its consent may be revoked by emailing
               info@in-visionconstruction.com, agrees that other methods are not valid means for revoking consent and may
               not be recognized by In-Vision Construction LLC, and, releases In-Vision Construction LLC from any
               liability related to Home Owner's efforts to revoke its prior express consent by other methods or means.
@@ -686,7 +714,7 @@ export default function GeneralContract() {
             in the circuit court in which the property is located. In the event legal action is required to enforce
             payment (including, without limitation, the filing of a lien) Home Owner will be responsible for all of
             In-Vision Construction LLC's costs of collection incurred by In-Vision Construction LLC, including, without
-            limitation, recording costs, court costs, attorney' fees and any other costs, plus interest at the legal
+            limitation, recording costs, court costs, attorney fees and any other costs, plus interest at the legal
             rate of 5% per annum or the highest amount of interest allowed by law from the date of accrual of such fees
             and costs, all of which shall be deemed to have accrued upon the commencement of such action and shall be
             paid whether or not such action is prosecuted to judgment. Any judgment or order entered in such action
@@ -792,7 +820,7 @@ export default function GeneralContract() {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
-GeneralContract.displayName = "GeneralContract"
+GeneralContract.displayName = "GeneralContract";

@@ -28,7 +28,7 @@ export default function Home() {
 
         <RandomTip />
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card className="shadow-md hover:shadow-lg transition-shadow bg-black bg-opacity-75">
             <CardHeader>
               <CardTitle className="text-white">Scope of Work</CardTitle>
@@ -60,13 +60,25 @@ export default function Home() {
           <Card className="shadow-md hover:shadow-lg transition-shadow bg-black bg-opacity-75">
             <CardHeader>
               <CardTitle className="text-white">Warranty Contract</CardTitle>
-              <CardDescription className="text-white">
-                Roof Replacement Warranty Certificate
-              </CardDescription>
+              <CardDescription className="text-white">Roof Replacement Warranty Certificate</CardDescription>
             </CardHeader>
             <CardContent>
               <Link href="/warranty-contract">
                 <Button className="w-full bg-[#32CD32] text-black hover:bg-[#32CD32]/90">Open Contract</Button>
+              </Link>
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-md hover:shadow-lg transition-shadow bg-black bg-opacity-75">
+            <CardHeader>
+              <CardTitle className="text-white">Third Party Authorization</CardTitle>
+              <CardDescription className="text-white">
+                Authorization form for mortgage and insurance company communication
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Link href="/third-party-authorization">
+                <Button className="w-full bg-[#32CD32] text-black hover:bg-[#32CD32]/90">Open Form</Button>
               </Link>
             </CardContent>
           </Card>

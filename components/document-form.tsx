@@ -20,7 +20,11 @@ export default function DocumentForm({ fields, formData, onChange }: DocumentFor
           <div key={field.id} className="space-y-2">
             <Label htmlFor={field.id}>{field.label}</Label>
             {field.type === "signature" ? (
-              <SignatureCanvas value={formData[field.id] || ""} onChange={(value) => onChange(field.id, value)} />
+              <SignatureCanvas 
+                value={formData[field.id] || ""} 
+                onChange={(value) => onChange(field.id, value)} 
+                allowTypedSignature={true}
+              />
             ) : (
               <Input
                 id={field.id}
