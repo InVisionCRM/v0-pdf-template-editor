@@ -8,6 +8,11 @@
     "start": "next start",
     "lint": "next lint"
   },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "canvas"
+    ]
+  },
   "dependencies": {
     "@emotion/is-prop-valid": "latest",
     "@hookform/resolvers": "^3.9.1",
