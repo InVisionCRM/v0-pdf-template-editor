@@ -1,4 +1,4 @@
-import { UserRole } from "@/lib/generated/prisma"
+import { Prisma } from "@prisma/client"
 import NextAuth from "next-auth"
 
 declare module "next-auth" {
@@ -8,7 +8,7 @@ declare module "next-auth" {
       email: string
       name: string
       image?: string
-      role: UserRole
+      role: Prisma.UserRoleType
     }
     accessToken: string
     refreshToken: string
@@ -19,14 +19,14 @@ declare module "next-auth" {
     email: string
     name: string
     image?: string
-    role: UserRole
+    role: Prisma.UserRoleType
   }
 }
 
 declare module "next-auth/jwt" {
   interface JWT {
     id: string
-    role: UserRole
+    role: Prisma.UserRoleType
     accessToken: string
     refreshToken: string
   }
