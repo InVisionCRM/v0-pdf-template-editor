@@ -9,8 +9,11 @@ import { Label } from "@/components/ui/label"
 import LoadingAnimation from "./loading-animation"
 import Image from "next/image"
 import AdoptSignatureDialog from "./adopt-signature-dialog"
+import { useLeadData } from "@/hooks/useLeadData"
 
 export default function WarrantyContract() {
+  const lead = useLeadData()
+  
   // Format current date as MM/DD/YYYY
   const formatDate = () => {
     const now = new Date()
@@ -20,15 +23,13 @@ export default function WarrantyContract() {
     return `${month}/${day}/${year}`
   }
 
-  const [formData, setFormData] = useState<Record<string, any>>(() => {
-    return {
-      date: formatDate(),
-      agreesDate: formatDate(),
-      projectAddress: "",
-      dateOfCompletion: "",
-      authorizedRepresentativeSignatureDate: formatDate(),
-    }
-  })
+  const [formData, setFormData] = useState(() => ({
+    date: formatDate(),
+    agreesDate: formatDate(),
+    projectAddress: lead?.address || "",
+    dateOfCompletion: "",
+    authorizedRepresentativeSignatureDate: formatDate(),
+  }))
 
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
   const contractRef = useRef<HTMLDivElement>(null)
@@ -37,6 +38,16 @@ export default function WarrantyContract() {
 
   // State to control the AdoptSignatureDialog visibility
   const [isAdoptSignatureDialogOpen, setIsAdoptSignatureDialogOpen] = useState(false)
+
+  // Effect to update form data when lead data is available
+  useEffect(() => {
+    if (lead) {
+      setFormData(prev => ({
+        ...prev,
+        projectAddress: lead.address || "",
+      }))
+    }
+  }, [lead])
 
   useEffect(() => {
     const currentDate = formatDate()

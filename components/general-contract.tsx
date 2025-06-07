@@ -17,8 +17,11 @@ import LoadingAnimation from "./loading-animation"
 // import { Stage, Layer, Text } from "react-konva"
 // import Konva from "konva"
 import AdoptSignatureDialog from "./adopt-signature-dialog"; // Import the new dialog
+import { useLeadData } from "@/hooks/useLeadData"
 
 export default function GeneralContract() {
+  const lead = useLeadData()
+  
   // Format current date as MM/DD/YYYY
   const formatDate = () => {
     const now = new Date()
@@ -28,13 +31,16 @@ export default function GeneralContract() {
     return `${month}/${day}/${year}`
   }
 
-  const [formData, setFormData] = useState<Record<string, any>>(() => {
-    // Initialize with current date
-    return {
-      date: formatDate(),
-      agreesDate: formatDate(),
-    }
-  })
+  const [formData, setFormData] = useState(() => ({
+    date: formatDate(),
+    agreesDate: formatDate(),
+    name: lead ? `${lead.firstName} ${lead.lastName}` : "",
+    projectAddress: lead?.address || "",
+    billingAddress: lead?.address || "",
+    phone: lead?.phone || "",
+    email: lead?.email || "",
+    emailFacsimile: lead?.email || "",
+  }))
 
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
   const contractRef = useRef<HTMLDivElement>(null)
@@ -66,6 +72,21 @@ export default function GeneralContract() {
       agreesDate: currentDate,
     }))
   }, [])
+
+  // Update form when lead data becomes available
+  useEffect(() => {
+    if (lead) {
+      setFormData(prev => ({
+        ...prev,
+        name: `${lead.firstName} ${lead.lastName}`,
+        projectAddress: lead.address || "",
+        billingAddress: lead.address || "",
+        phone: lead.phone || "",
+        email: lead.email || "",
+        emailFacsimile: lead.email || "",
+      }))
+    }
+  }, [lead])
 
   const handleInputChange = (field: string, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }))

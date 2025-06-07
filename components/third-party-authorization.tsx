@@ -10,24 +10,30 @@ import { Label } from "@/components/ui/label"
 import LoadingAnimation from "./loading-animation"
 import { format } from "date-fns"
 import AdoptSignatureDialog from "./adopt-signature-dialog"
+import { useLeadData } from "@/hooks/useLeadData"
 
 export default function ThirdPartyAuthorization() {
+  const lead = useLeadData()
+  
   const formatDate = () => {
     const now = new Date()
     return format(now, "MM/dd/yyyy")
   }
 
-  const [formData, setFormData] = useState<Record<string, any>>(() => {
-    return {
-      date: formatDate(),
-      primarySignatureDate: formatDate(),
-      coSignatureDate: formatDate(),
-      authorizedParty1Name: "In-Vision Construction LLC",
-      authorizedParty1Phone: "313-247-0142",
-      authorizedParty1Email: "Info@in-visionconstruction.com",
-      authorizedParty1Address: "36712 Chatham Ct, Clinton Township, Mi 48036",
-    }
-  })
+  const [formData, setFormData] = useState(() => ({
+    date: formatDate(),
+    primarySignatureDate: formatDate(),
+    coSignatureDate: formatDate(),
+    authorizedParty1Name: "In-Vision Construction LLC",
+    authorizedParty1Phone: "313-247-0142",
+    authorizedParty1Email: "Info@in-visionconstruction.com",
+    authorizedParty1Address: "36712 Chatham Ct, Clinton Township, Mi 48036",
+    homeownerName: lead ? `${lead.firstName} ${lead.lastName}` : "",
+    homeownerPhone: lead?.phone || "",
+    homeownerAddress: lead?.address || "",
+    insuranceCompanyName: lead?.insuranceCompany || "",
+    insuranceClaimNumber: lead?.claimNumber || "",
+  }))
 
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
   const formRef = useRef<HTMLDivElement>(null)
@@ -142,6 +148,20 @@ export default function ThirdPartyAuthorization() {
       setIsGeneratingPdf(false)
     }
   }
+
+  // Update form when lead data becomes available
+  useEffect(() => {
+    if (lead) {
+      setFormData(prev => ({
+        ...prev,
+        homeownerName: `${lead.firstName} ${lead.lastName}`,
+        homeownerPhone: lead.phone || "",
+        homeownerAddress: lead.address || "",
+        insuranceCompanyName: lead.insuranceCompany || "",
+        insuranceClaimNumber: lead.claimNumber || "",
+      }))
+    }
+  }, [lead])
 
   return (
     <div className="max-w-4xl mx-auto bg-white p-6 shadow-lg">

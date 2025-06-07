@@ -1,0 +1,353 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                       String  @id @default(cuid())
+  userId                   String  @db.Uuid
+  type                     String
+  provider                 String
+  providerAccountId        String
+  refresh_token            String?
+  access_token             String?
+  expires_at               Int?
+  token_type               String?
+  scope                    String?
+  id_token                 String?
+  session_state            String?
+  refresh_token_expires_in Int?
+  user                     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  sessionToken String   @unique
+  userId       String   @db.Uuid
+  expires      DateTime @db.Timestamptz(6)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime @db.Timestamptz(6)
+
+  @@unique([identifier, token])
+}
+
+model User {
+  id                   String                @id @default(uuid()) @db.Uuid
+  name                 String                @db.VarChar(255)
+  email                String                @unique @db.VarChar(255)
+  emailVerified        DateTime?             @db.Timestamptz(6)
+  image                String?
+  password             String?               @db.VarChar(255)
+  role                 UserRole              @default(USER)
+  createdAt            DateTime              @default(now()) @db.Timestamptz(6)
+  updatedAt            DateTime              @default(now()) @updatedAt @db.Timestamptz(6)
+  accounts             Account[]
+  activities           Activity[]
+  appointments         Appointment[]
+  googleCalendarEvents GoogleCalendarEvent[]
+  assignedLeads        Lead[]                @relation("AssignedLeads")
+  uploadedPhotos       LeadPhoto[]
+  routePoints          RoutePoint[]
+  sessions             Session[]
+  visionMarkers        VisionMarker[]
+  visits               Visit[]
+}
+
+model Lead {
+  id                       String        @id @db.VarChar(255)
+  firstName                String?       @db.VarChar(255)
+  lastName                 String?       @db.VarChar(255)
+  email                    String?       @db.VarChar(255)
+  phone                    String?       @db.VarChar(50)
+  address                  String?       @db.VarChar(510)
+  status                   LeadStatus    @default(follow_ups)
+  assignedToId             String?       @db.Uuid
+  notes                    String?
+  insuranceCompany         String?
+  insurancePolicyNumber    String?
+  insurancePhone           String?
+  insuranceAdjusterName    String?
+  insuranceAdjusterPhone   String?
+  insuranceAdjusterEmail   String?
+  insuranceDeductible      String?
+  insuranceSecondaryPhone  String?
+  dateOfLoss               DateTime?     @db.Timestamptz(6)
+  damageType               DamageType?
+  claimNumber              String?
+  adjusterAppointmentDate  DateTime?     @db.Timestamptz(6)
+  adjusterAppointmentTime  String?
+  adjusterAppointmentNotes String?
+  googleEventId            String?
+  latitude                 Decimal?      @db.Decimal(10, 7)
+  longitude                Decimal?      @db.Decimal(10, 7)
+  createdAt                DateTime      @default(now()) @db.Timestamptz(6)
+  updatedAt                DateTime      @default(now()) @updatedAt @db.Timestamptz(6)
+  googleDriveFolderId      String?
+  googleDriveUrl           String?
+  metadata                 Json?
+  activities               Activity[]
+  appointments             Appointment[]
+  contracts                Contract[]
+  files                    File[]
+  assignedTo               User?         @relation("AssignedLeads", fields: [assignedToId], references: [id])
+  photos                   LeadPhoto[]
+  visionMarker             VisionMarker?
+  visits                   Visit[]
+
+  @@index([assignedToId], map: "idx_leads_assigned_to")
+  @@index([status], map: "idx_leads_status")
+  @@index([latitude, longitude], map: "idx_leads_coordinates")
+}
+
+model Appointment {
+  id        String             @id @default(uuid())
+  title     String
+  startTime DateTime           @db.Timestamptz(6)
+  endTime   DateTime           @db.Timestamptz(6)
+  purpose   AppointmentPurpose
+  status    AppointmentStatus  @default(SCHEDULED)
+  address   String?
+  notes     String?
+  leadId    String             @db.VarChar
+  userId    String             @db.Uuid
+  createdAt DateTime           @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime           @updatedAt @db.Timestamptz(6)
+  lead      Lead               @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([leadId])
+  @@index([userId])
+  @@index([startTime])
+}
+
+model Activity {
+  id          String       @id @default(uuid())
+  type        ActivityType
+  title       String
+  description String?
+  userId      String       @db.Uuid
+  leadId      String?      @db.VarChar(255)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  imageUrl    String?
+  lead        Lead?        @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([leadId])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model VisionMarker {
+  id          String      @id @default(uuid()) @db.Uuid
+  latitude    Float
+  longitude   Float
+  address     String
+  notes       String?
+  status      KnockStatus @default(KNOCKED)
+  contactInfo Json?
+  visits      Json?
+  followUp    Json?
+  userId      String?     @db.Uuid
+  leadId      String?     @unique @db.VarChar(255)
+  createdAt   DateTime    @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime    @default(now()) @updatedAt @db.Timestamptz(6)
+  lead        Lead?       @relation(fields: [leadId], references: [id])
+  user        User?       @relation(fields: [userId], references: [id])
+
+  @@index([latitude], map: "idx_vision_markers_lat")
+  @@index([longitude], map: "idx_vision_markers_lng")
+  @@index([status], map: "idx_vision_markers_status")
+  @@index([userId])
+  @@index([leadId])
+}
+
+model Visit {
+  id            String      @id @default(uuid()) @db.Uuid
+  address       String
+  latitude      Float
+  longitude     Float
+  status        KnockStatus
+  notes         String?
+  followUpDate  DateTime?   @db.Timestamptz(6)
+  followUpTime  String?
+  followUpNotes String?
+  leadId        String?     @db.VarChar(255)
+  userId        String?     @db.Uuid
+  createdAt     DateTime?   @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime?   @default(now()) @updatedAt @db.Timestamptz(6)
+  lead          Lead?       @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  user          User?       @relation(fields: [userId], references: [id])
+
+  @@index([leadId])
+  @@index([userId])
+  @@index([status])
+}
+
+model GoogleCalendarEvent {
+  id            String    @id @default(uuid())
+  userId        String    @db.Uuid
+  googleEventId String?   @unique @map("googleId")
+  summary       String
+  description   String?
+  location      String?
+  startTime     DateTime?
+  endTime       DateTime?
+  isAllDay      Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("Event")
+}
+
+model ClientIdSequence {
+  id     Int @id @default(autoincrement())
+  lastId Int @default(50000)
+}
+
+model File {
+  id        String   @id @default(cuid())
+  url       String
+  name      String
+  size      Int
+  type      String
+  category  String?
+  leadId    String   @db.VarChar(255)
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+  lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@index([leadId])
+  @@index([category])
+}
+
+model Contract {
+  id           String   @id @default(uuid()) @db.Uuid
+  leadId       String   @db.VarChar(255)
+  contractType String
+  signatures   Json
+  dates        Json
+  names        Json
+  addresses    Json
+  contactInfo  Json
+  pdfUrl       String?
+  createdAt    DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt    DateTime @updatedAt @db.Timestamptz(6)
+  lead         Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@index([leadId])
+}
+
+model RoutePoint {
+  id        String   @id @default(cuid())
+  userId    String   @db.Uuid
+  timestamp DateTime @default(now())
+  lat       Float
+  lng       Float
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([timestamp])
+}
+
+model LeadPhoto {
+  id           String   @id @default(uuid())
+  name         String
+  description  String?
+  url          String
+  thumbnailUrl String
+  mimeType     String?
+  size         Int?
+  leadId       String   @db.VarChar(255)
+  uploadedById String?  @db.Uuid
+  createdAt    DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt    DateTime @updatedAt @db.Timestamptz(6)
+  driveFileId  String?
+  lead         Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  uploadedBy   User?    @relation(fields: [uploadedById], references: [id])
+
+  @@index([leadId])
+  @@index([uploadedById])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+enum UserRole {
+  ADMIN
+  MANAGER
+  USER
+}
+
+enum LeadStatus {
+  signed_contract
+  scheduled
+  colors
+  acv
+  job
+  completed_jobs
+  zero_balance
+  denied
+  follow_ups
+}
+
+enum AppointmentPurpose {
+  INSPECTION
+  FILE_CLAIM
+  FOLLOW_UP
+  ADJUSTER
+  BUILD_DAY
+  OTHER
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+  RESCHEDULED
+  NO_SHOW
+}
+
+enum ActivityType {
+  LEAD_CREATED
+  LEAD_UPDATED
+  NOTE_ADDED
+  MEETING_SCHEDULED
+  DOCUMENT_UPLOADED
+  ESTIMATE_CREATED
+  CONTRACT_CREATED
+  STATUS_CHANGED
+  APPOINTMENT_CREATED
+  APPOINTMENT_UPDATED
+}
+
+enum KnockStatus {
+  KNOCKED
+  NO_ANSWER
+  NOT_INTERESTED
+  FOLLOW_UP
+  INSPECTED
+  IN_CONTRACT
+}
+
+enum DamageType {
+  HAIL
+  WIND
+  FIRE
+  WIND_AND_HAIL
+}

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import { Input } from "@/components/ui/input"
+import { loadGoogleMapsScript, getGoogleMapsLoadingState } from "@/lib/google-maps"
 
 interface AddressAutocompleteProps {
   value: string
@@ -18,55 +19,23 @@ export default function AddressAutocomplete({
 }: AddressAutocompleteProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null)
-  const [isLoaded, setIsLoaded] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const { isLoading, isLoaded } = getGoogleMapsLoadingState()
 
   // Initialize Google Maps API
   useEffect(() => {
-    // Check if the Google Maps API is already loaded
-    if (typeof window.google !== "undefined" && window.google.maps && window.google.maps.places) {
-      setIsLoaded(true)
-      return
-    }
-
-    async function loadGoogleMapsScript() {
+    async function initGoogleMaps() {
       try {
-        setIsLoading(true)
-
-        // Fetch the script URL from our secure API route
-        const response = await fetch("/api/google-maps")
-        const data = await response.json()
-
-        if (response.ok && data.url) {
-          // Load the Google Maps API script
-          const script = document.createElement("script")
-          script.src = data.url
-          script.async = true
-          script.defer = true
-          script.onload = () => {
-            setIsLoaded(true)
-            setIsLoading(false)
-          }
-          document.head.appendChild(script)
-
-          return () => {
-            // Clean up script if component unmounts before script loads
-            if (document.head.contains(script)) {
-              document.head.removeChild(script)
-            }
-          }
-        } else {
-          throw new Error(data.error || "Failed to load Google Maps API")
-        }
+        await loadGoogleMapsScript()
       } catch (err) {
         console.error("Error loading Google Maps API:", err)
         setError(err instanceof Error ? err.message : "Unknown error")
-        setIsLoading(false)
       }
     }
 
-    loadGoogleMapsScript()
+    if (!isLoaded) {
+      initGoogleMaps()
+    }
   }, [])
 
   // Initialize autocomplete when Google Maps API is loaded

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -9,6 +9,7 @@ import SignatureCanvas from "./signature-canvas"
 import { FileIcon, LockIcon, CheckCircleIcon } from "lucide-react"
 import LoadingAnimation from "./loading-animation"
 import AddressAutocomplete from "./address-autocomplete"
+import { useLeadData } from "@/hooks/useLeadData"
 
 // Common color options for different categories
 const roofingColors = [
@@ -63,6 +64,7 @@ const gutterColors = [
 const trimColors = ["White", "Almond", "Clay", "Tan", "Gray", "Black", "Brown", "Bronze", "Other"]
 
 export default function ContractForm() {
+  const lead = useLeadData()
   const [formData, setFormData] = useState<Record<string, any>>(() => {
     // Get today's date in YYYY-MM-DD format for date inputs
     const today = new Date().toISOString().split("T")[0]
@@ -74,6 +76,13 @@ export default function ContractForm() {
       date: displayDate,
       customerSignatureDate: today,
       invisionSignatureDate: today,
+      // Pre-fill lead data if available
+      customerName: "",
+      customerEmail: "",
+      customerPhone: "",
+      propertyAddress: "",
+      insuranceCompany: "",
+      policyNumber: "",
     }
   })
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
@@ -86,6 +95,19 @@ export default function ContractForm() {
   const page1Ref = useRef<HTMLDivElement>(null)
   const page2Ref = useRef<HTMLDivElement>(null)
   const page3Ref = useRef<HTMLDivElement>(null)
+
+  // Effect to update form data when lead data is available
+  useEffect(() => {
+    if (lead) {
+      setFormData(prev => ({
+        ...prev,
+        customerName: `${lead.firstName} ${lead.lastName}`,
+        address: lead.address,
+        // Keep the auto-filled date from initial state
+        // Company name is manually filled by user
+      }))
+    }
+  }, [lead])
 
   const handleInputChange = (field: string, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
