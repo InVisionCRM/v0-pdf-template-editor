@@ -3,29 +3,25 @@ import { getToken } from "next-auth/jwt"
 
 export async function middleware(req) {
   const token = await getToken({ req })
-  
-  // Allow auth-related paths
-  if (req.nextUrl.pathname.startsWith('/api/auth')) {
+  const { pathname } = req.nextUrl
+
+  // Allow auth-related API calls and the sign-in/error pages
+  if (
+    pathname.startsWith('/api/auth') ||
+    pathname === '/auth/signin' ||
+    pathname === '/auth/error'
+  ) {
     return NextResponse.next()
   }
 
-  // If no token and not an auth path, return 401
+  // If no token, redirect to the sign-in page
   if (!token) {
-    return new NextResponse(
-      JSON.stringify({ message: "Authentication required" }),
-      { 
-        status: 401,
-        headers: { 
-          "content-type": "application/json",
-          // Allow CORS
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-          "Access-Control-Allow-Headers": "Content-Type, Authorization"
-        }
-      }
-    )
+    const signInUrl = new URL('/auth/signin', req.url)
+    signInUrl.searchParams.set('callbackUrl', req.url)
+    return NextResponse.redirect(signInUrl)
   }
 
+  // If token exists, allow the request to proceed
   return NextResponse.next()
 }
 
@@ -36,8 +32,11 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
-     * - public folder
+     * - public assets (images, fonts, etc.)
+     *
+     * This ensures the middleware runs on all pages and API routes
+     * that require authentication.
      */
-    "/((?!_next/static|_next/image|favicon.ico|public).*)",
+    "/((?!_next/static|_next/image|favicon.ico|.*\\..*).*)",
   ],
 }
