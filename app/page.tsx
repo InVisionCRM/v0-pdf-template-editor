@@ -114,7 +114,7 @@ export default function Home() {
 
         {/* — Search Lead — */}
         <div className="mb-1 px-20 text-center text-xs">
-          <h2 className="text-xs font-thin text-[#D2EC43] mb-1">Search Lead:</h2>
+          <h2 className="text-xs font-semibold text-[#ffffff] mb-1">Search Lead:</h2>
           <LeadSearch onLeadSelect={setSelectedLead} selectedLead={selectedLead} />
         </div>
 
