@@ -6,7 +6,7 @@ const World = dynamic(() => import("@/components/ui/globe").then((m) => m.World)
   ssr: false,
 });
 
-const colors = ["#32CD32", "#228B22", "#006400"]; // Light green to dark green
+const colors = ["#D2EC43", "#D2EC43", "#D2EC43"]; // Light green to dark green
 
 const sampleArcs = [
   {
@@ -376,14 +376,14 @@ export function GlobeComponent() {
     pointSize: 1,
     globeColor: "#000000", // Dark green base
     showAtmosphere: false,
-    atmosphereColor: "#32CD32", // Light green atmosphere
+    atmosphereColor: "#D2EC43", // Light green atmosphere
     atmosphereAltitude: 0.1,
     emissive: "#000000",
     emissiveIntensity: 0.1,
     shininess: 0.9,
-    polygonColor: "rgb(201, 239, 14)", // Semi-transparent light green
-    ambientLight: "#32CD32",
-    directionalLeftLight: "#F1F20E",
+    polygonColor: "rgb(210, 236, 67)", // Semi-transparent light green
+    ambientLight: "#D2EC43",
+    directionalLeftLight: "#ffffff",
     directionalTopLight: "#ffffff",
     pointLight: "#ffffff",
     arcTime: 2000,
