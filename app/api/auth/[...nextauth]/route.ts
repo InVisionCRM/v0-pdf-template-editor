@@ -5,7 +5,7 @@ import { PrismaAdapter } from "@auth/prisma-adapter"
 import { prisma } from "@/lib/db"
 // import { GOOGLE_CALENDAR_CONFIG } from "@/lib/config/google-calendar"
 import { GOOGLE_SCOPES } from "@/lib/constants"
-import { Prisma } from "@prisma/client"
+import { PrismaClient } from "@prisma/client"
 
 const UserRole = {
   ADMIN: 'ADMIN',
