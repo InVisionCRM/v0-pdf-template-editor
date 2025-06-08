@@ -1,34 +1,43 @@
-import { withAuth } from "next-auth/middleware"
 import { NextResponse } from "next/server"
+import { getToken } from "next-auth/jwt"
 
-export default withAuth(
-  function middleware(req) {
-    // If there's no session, return a 401 response instead of redirecting
-    if (!req.nextauth.token) {
-      return new NextResponse(
-        JSON.stringify({ message: "Authentication required" }),
-        { status: 401, headers: { "content-type": "application/json" } }
-      )
-    }
+export async function middleware(req) {
+  const token = await getToken({ req })
+  
+  // Allow auth-related paths
+  if (req.nextUrl.pathname.startsWith('/api/auth')) {
     return NextResponse.next()
-  },
-  {
-    callbacks: {
-      authorized: ({ token }) => !!token
-    },
   }
-)
+
+  // If no token and not an auth path, return 401
+  if (!token) {
+    return new NextResponse(
+      JSON.stringify({ message: "Authentication required" }),
+      { 
+        status: 401,
+        headers: { 
+          "content-type": "application/json",
+          // Allow CORS
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type, Authorization"
+        }
+      }
+    )
+  }
+
+  return NextResponse.next()
+}
 
 export const config = {
   matcher: [
     /*
-     * Match all request paths except for the ones starting with:
-     * - api/auth (auth endpoints)
+     * Match all request paths except for:
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - public folder
      */
-    "/((?!api/auth|_next/static|_next/image|favicon.ico|public).*)",
+    "/((?!_next/static|_next/image|favicon.ico|public).*)",
   ],
 }
