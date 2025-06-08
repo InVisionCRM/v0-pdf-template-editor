@@ -89,10 +89,6 @@ export const authOptions: AuthOptions = {
       return session;
     }
   },
-  pages: {
-    signIn: '/auth/signin',
-    // error: '/auth/error', // Optional: specify a custom error page
-  },
   cookies: {
     sessionToken: {
       name: process.env.NODE_ENV === 'production' ? `__Secure-next-auth.session-token` : `next-auth.session-token`,
