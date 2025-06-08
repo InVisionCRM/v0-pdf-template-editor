@@ -93,7 +93,7 @@ export default function Home() {
       </div>
 
       {/* — Buttons, Search & Lead Info — */}
-      <div className="fixed left-1/2 -translate-x-1/2 top-[100px] z-50 container mx-auto px-4">
+      <div className="fixed left-1/2 -translate-x-1/2 top-[100px] z-50 container mx-auto px-5">
         {/* — Contract Buttons — */}
         <div className="grid grid-cols-2 gap-2 mb-2">
           {[
@@ -104,7 +104,7 @@ export default function Home() {
           ].map(([label, href]) => (
             <Button
               key={href}
-              className="w-full h-12 text-md btn-gradient text-black flex items-center justify-center"
+              className="w-full h-10 text-md btn-gradient text-black flex items-center justify-center"
               onClick={() => navigateTo(href)}
             >
               {label}
@@ -113,14 +113,14 @@ export default function Home() {
         </div>
 
         {/* — Search Lead — */}
-        <div className="mb-2">
-          <h2 className="text-sm font-semibold text-[#D2EC43] mb-1">Search Lead:</h2>
+        <div className="mb-1 px-20 text-center text-xs">
+          <h2 className="text-xs font-thin text-[#D2EC43] mb-1">Search Lead:</h2>
           <LeadSearch onLeadSelect={setSelectedLead} selectedLead={selectedLead} />
         </div>
 
         {/* — Selected Lead Info — */}
         {selectedLead && (
-          <div className="bg-black bg-opacity-50 border border-[#D2EC43]/50 rounded p-2 mb-2">
+          <div className="bg-black bg-opacity-50 border border-[#D2EC43]/50 rounded p-1 mb-1">
             <div className="flex justify-between">
               <div className="text-white space-y-1 text-xs">
                 <p>
