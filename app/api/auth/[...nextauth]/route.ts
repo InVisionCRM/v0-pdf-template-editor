@@ -35,6 +35,10 @@ export const authOptions: AuthOptions = {
   session: {
     strategy: "jwt",
   },
+  // Prevent redirects to sign-in page
+  pages: {
+    signIn: '/api/auth/signin/google'
+  },
   callbacks: {
     async signIn({ user, account, profile }) {
       if (!user.email) return false;
