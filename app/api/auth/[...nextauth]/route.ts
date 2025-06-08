@@ -5,7 +5,13 @@ import { PrismaAdapter } from "@auth/prisma-adapter"
 import { prisma } from "@/lib/db"
 // import { GOOGLE_CALENDAR_CONFIG } from "@/lib/config/google-calendar"
 import { GOOGLE_SCOPES } from "@/lib/constants"
-import { UserRole } from "@prisma/client"
+import { Prisma } from "@prisma/client"
+
+const UserRole = {
+  ADMIN: 'ADMIN',
+  MANAGER: 'MANAGER',
+  USER: 'USER'
+} as const
 
 // Define all required Google Calendar scopes
 const GOOGLE_SCOPES_JOINED = GOOGLE_SCOPES.join(" ")
