@@ -93,7 +93,7 @@ export default function Home() {
       </div>
 
       {/* — Buttons, Search & Lead Info — */}
-      <div className="fixed left-1/2 -translate-x-1/2 top-[140px] z-10 container mx-auto px-4">
+      <div className="fixed left-1/2 -translate-x-1/2 top-[100px] z-50 container mx-auto px-4">
         {/* — Contract Buttons — */}
         <div className="grid grid-cols-2 gap-2 mb-2">
           {[
@@ -153,7 +153,7 @@ export default function Home() {
       </div>
 
       {/* — Tooltip at Bottom — */}
-      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-10 container mx-auto px-4">
+      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-5 text-xs container mx-auto px-4">
         <RandomTip />
       </div>
     </main>
