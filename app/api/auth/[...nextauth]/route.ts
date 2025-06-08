@@ -32,6 +32,10 @@ export const authOptions: AuthOptions = {
       }
     }),
   ],
+  pages: {
+    signIn: '/auth/signin',
+    error: '/auth/error',
+  },
   session: {
     strategy: "jwt",
   },
