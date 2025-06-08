@@ -2,10 +2,10 @@ import { AuthOptions } from "next-auth"
 import NextAuth from "next-auth/next"
 import GoogleProvider from "next-auth/providers/google"
 import { PrismaAdapter } from "@auth/prisma-adapter"
-import { prisma } from "@/lib/db/prisma"
+import { prisma } from "@/lib/db"
 // import { GOOGLE_CALENDAR_CONFIG } from "@/lib/config/google-calendar"
 import { GOOGLE_SCOPES } from "@/lib/constants"
-import { UserRole } from "@/lib/generated/prisma"
+import { UserRole } from "@prisma/client"
 
 // Define all required Google Calendar scopes
 const GOOGLE_SCOPES_JOINED = GOOGLE_SCOPES.join(" ")
