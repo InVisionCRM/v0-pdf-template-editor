@@ -69,12 +69,12 @@ export function Globe({ globeConfig, data }: WorldProps) {
   const [isInitialized, setIsInitialized] = useState(false);
 
   const defaultProps = {
-    pointSize: 1,
+    pointSize: 5,
     atmosphereColor: "#ffffff",
     showAtmosphere: true,
     atmosphereAltitude: 0.15,
-    polygonColor: "rgba(255,255,255,0.7)",
-    globeColor: "#062056",
+    polygonColor: "rgb(171, 214, 27)",
+    globeColor: "#F1F20E",
     emissive: "#000000",
     emissiveIntensity: 0.1,
     shininess: 0.9,
@@ -270,7 +270,7 @@ export function World(props: WorldProps) {
         enableRotate={true}
         minDistance={300}
         maxDistance={600}
-        autoRotateSpeed={globeConfig.autoRotateSpeed || 1}
+        autoRotateSpeed={globeConfig.autoRotateSpeed || 2}
         autoRotate={globeConfig.autoRotate !== false}
         minPolarAngle={Math.PI / 3.5}
         maxPolarAngle={Math.PI - Math.PI / 3}

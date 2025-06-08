@@ -373,17 +373,17 @@ const sampleArcs = [
 
 export function GlobeComponent() {
   const globeConfig = {
-    pointSize: 4,
-    globeColor: "#062056", // Dark green base
-    showAtmosphere: true,
+    pointSize: 1,
+    globeColor: "#000000", // Dark green base
+    showAtmosphere: false,
     atmosphereColor: "#32CD32", // Light green atmosphere
     atmosphereAltitude: 0.1,
-    emissive: "#004d00",
+    emissive: "#000000",
     emissiveIntensity: 0.1,
     shininess: 0.9,
-    polygonColor: "rgb(14, 239, 14)", // Semi-transparent light green
+    polygonColor: "rgb(201, 239, 14)", // Semi-transparent light green
     ambientLight: "#32CD32",
-    directionalLeftLight: "#ffffff",
+    directionalLeftLight: "#F1F20E",
     directionalTopLight: "#ffffff",
     pointLight: "#ffffff",
     arcTime: 2000,
@@ -392,7 +392,7 @@ export function GlobeComponent() {
     maxRings: 3,
     initialPosition: { lat: 22.3193, lng: 114.1694 },
     autoRotate: true,
-    autoRotateSpeed: 0.5,
+    autoRotateSpeed: 0.9,
   };
 
   return (

@@ -81,11 +81,11 @@ export default function RandomTip() {
   }
 
   return (
-    <Card className="bg-black bg-opacity-75 border-[#32CD32] border border-opacity-50 mb-4 max-w-lg mx-auto">
+    <Card className="bg-black bg-opacity-75 border-[#F1F20E] border border-opacity-50 mb-4 max-w-lg mx-auto">
       <CardContent className="p-2">
         <div className="flex items-start gap-2">
-          <LightbulbIcon className="h-4 w-4 text-[#32CD32] flex-shrink-0 mt-0.5" />
-          <p className="text-white text-xs">{tip}</p>
+          <LightbulbIcon className="h-5 w-4 text-[#F1F20E] flex-shrink-0 mt-0.5" />
+          <p className="text-white text-large">{tip}</p>
         </div>
       </CardContent>
     </Card>

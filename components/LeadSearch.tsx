@@ -60,7 +60,7 @@ export function LeadSearch({ onLeadSelect, selectedLead }: LeadSearchProps) {
             placeholder="Search by name, email, or phone..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="bg-black bg-opacity-50 border-[#32CD32] text-white placeholder-gray-400 pr-10 h-12 text-lg"
+            className="bg-black bg-opacity-50 border-[#F1F20E] text-white placeholder-gray-400 pr-10 h-12 text-lg"
           />
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
         </div>
@@ -79,7 +79,7 @@ export function LeadSearch({ onLeadSelect, selectedLead }: LeadSearchProps) {
               {searchResults.map((lead) => (
                 <div
                   key={lead.id}
-                  className="p-2 bg-black bg-opacity-50 rounded-lg border border-[#32CD32] cursor-pointer hover:bg-opacity-75 transition-colors"
+                  className="p-2 bg-black bg-opacity-50 rounded-lg border border-[#F1F20E] cursor-pointer hover:bg-opacity-75 transition-colors"
                   onClick={() => onLeadSelect(lead)}
                 >
                   <h3 className="font-medium text-white">

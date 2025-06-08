@@ -4,10 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build",
+    "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "postinstall": "prisma generate"
+    "lint": "next lint"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
@@ -91,7 +90,6 @@
     "@types/react-dom": "^19",
     "@types/three": "^0.177.0",
     "postcss": "^8",
-    "prisma": "^6.9.0",
     "tailwindcss": "^3.4.17",
     "typescript": "^5"
   }

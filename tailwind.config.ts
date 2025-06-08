@@ -96,7 +96,7 @@ const config: Config = {
     function({ addComponents }) {
       addComponents({
         '.btn-gradient': {
-          '@apply bg-gradient-to-br from-[#32CD32] via-[#1a4a1a] to-black hover:from-[#3EE03E] hover:via-[#2a6e2a] hover:to-[#1a1a1a] text-white font-semibold rounded-xl shadow-lg hover:shadow-[#32CD32]/30 transition-all duration-300 ease-out border border-white/10': {}
+          '@apply bg-gradient-to-br from-[#E4E013] via-[#F1F20E] to-black hover:from-[#3EE03E] hover:via-[#2a6e2a] hover:to-[#1a1a1a] text-white font-semibold rounded-xl shadow-lg hover:shadow-[#32CD32]/30 transition-all duration-300 ease-out border border-white/10': {}
         }
       })
     }

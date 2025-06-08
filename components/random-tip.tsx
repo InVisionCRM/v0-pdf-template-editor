@@ -41,7 +41,7 @@ export default function RandomTip() {
     <Card className="bg-black bg-opacity-75 border-[#32CD32] border-2 mb-6">
       <CardContent className="p-4">
         <div className="flex items-start gap-3">
-          <LightbulbIcon className="h-6 w-6 text-[#32CD32] flex-shrink-0 mt-0.5" />
+          <LightbulbIcon className="h-10 w-6 text-[#32CD32] flex-shrink-0 mt-0.5" />
           <p className="text-white text-sm">{tip}</p>
         </div>
       </CardContent>

@@ -5,7 +5,7 @@ import { PrismaAdapter } from "@auth/prisma-adapter"
 import { prisma } from "@/lib/db/prisma"
 // import { GOOGLE_CALENDAR_CONFIG } from "@/lib/config/google-calendar"
 import { GOOGLE_SCOPES } from "@/lib/constants"
-import { Prisma } from "@prisma/client"
+import { UserRole } from "@/lib/generated/prisma"
 
 // Define all required Google Calendar scopes
 const GOOGLE_SCOPES_JOINED = GOOGLE_SCOPES.join(" ")
@@ -41,7 +41,7 @@ export const authOptions: AuthOptions = {
           create: {
             email: user.email,
             name: user.name || profile?.name || user.email,
-            role: "USER",
+            role: UserRole.USER,
             image: user.image || null
           },
         });
