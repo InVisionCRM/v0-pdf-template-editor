@@ -1,15 +1,22 @@
 import { NextResponse } from "next/server"
+import type { NextRequest } from "next/server"
 import { getToken } from "next-auth/jwt"
 
-export async function middleware(req) {
-  const token = await getToken({ req })
+export async function middleware(req: NextRequest) {
+  const token = await getToken({ 
+    req,
+    secret: process.env.NEXTAUTH_SECRET,
+    secureCookie: process.env.NODE_ENV === "production"
+  })
   const { pathname } = req.nextUrl
 
   // Allow auth-related API calls and the sign-in/error pages
   if (
     pathname.startsWith('/api/auth') ||
     pathname === '/auth/signin' ||
-    pathname === '/auth/error'
+    pathname === '/auth/error' ||
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/public')
   ) {
     return NextResponse.next()
   }
@@ -33,10 +40,10 @@ export const config = {
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - public assets (images, fonts, etc.)
+     * - api/auth (NextAuth endpoints)
      *
-     * This ensures the middleware runs on all pages and API routes
-     * that require authentication.
+     * This ensures the middleware runs on all pages that require authentication.
      */
-    "/((?!_next/static|_next/image|favicon.ico|.*\\..*).*)",
+    "/((?!_next/static|_next/image|favicon.ico|public|api/auth).*)",
   ],
 }

@@ -6,6 +6,7 @@ import { prisma } from "@/lib/db"
 // import { GOOGLE_CALENDAR_CONFIG } from "@/lib/config/google-calendar"
 import { GOOGLE_SCOPES } from "@/lib/constants"
 import { PrismaClient } from "@prisma/client"
+import type { Adapter } from "next-auth/adapters"
 
 const UserRole = {
   ADMIN: 'ADMIN',
@@ -17,7 +18,7 @@ const UserRole = {
 const GOOGLE_SCOPES_JOINED = GOOGLE_SCOPES.join(" ")
 
 export const authOptions: AuthOptions = {
-  adapter: PrismaAdapter(prisma),
+  adapter: PrismaAdapter(prisma) as Adapter,
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -38,16 +39,27 @@ export const authOptions: AuthOptions = {
   },
   session: {
     strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   callbacks: {
     async signIn({ user, account, profile }) {
-      if (!user.email) return false;
+      if (process.env.NODE_ENV === 'development') {
+        console.log('SignIn callback triggered:', { user: user?.email, account: account?.provider })
+      }
+      
+      if (!user.email) {
+        console.error('SignIn failed: No email provided')
+        return false;
+      }
       
       try {
         // Create or update user with proper name and role
-        await prisma.user.upsert({
+        const dbUser = await prisma.user.upsert({
           where: { email: user.email },
-          update: {},
+          update: {
+            name: user.name || profile?.name || user.email,
+            image: user.image || null
+          },
           create: {
             email: user.email,
             name: user.name || profile?.name || user.email,
@@ -55,6 +67,11 @@ export const authOptions: AuthOptions = {
             image: user.image || null
           },
         });
+        
+        if (process.env.NODE_ENV === 'development') {
+          console.log('User created/updated successfully:', dbUser.email)
+        }
+        
         return true;
       } catch (error) {
         console.error("Error in signIn callback:", error);
@@ -62,6 +79,10 @@ export const authOptions: AuthOptions = {
       }
     },
     async jwt({ token, account, user }) {
+      if (process.env.NODE_ENV === 'development' && account) {
+        console.log('JWT callback triggered for user:', user?.email)
+      }
+      
       if (account && user) {
         token.accessToken = account.access_token || "";
         token.refreshToken = account.refresh_token || "";
@@ -91,6 +112,18 @@ export const authOptions: AuthOptions = {
         session.refreshToken = token.refreshToken;
       }
       return session;
+    },
+    async redirect({ url, baseUrl }) {
+      // Handles redirect on signin
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Redirect callback:', { url, baseUrl })
+      }
+      
+      // Allows relative callback URLs
+      if (url.startsWith("/")) return `${baseUrl}${url}`
+      // Allows callback URLs on the same origin
+      else if (new URL(url).origin === baseUrl) return url
+      return baseUrl
     }
   },
   cookies: {
