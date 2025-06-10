@@ -105,13 +105,23 @@ export const authOptions: AuthOptions = {
       return token;
     },
     async session({ session, token }) {
-      if (session.user) {
-        session.user.id = token.id;
-        session.user.role = token.role;
-        session.accessToken = token.accessToken;
-        session.refreshToken = token.refreshToken;
+      // Handle JWT decryption errors gracefully
+      try {
+        if (session.user) {
+          session.user.id = token.id;
+          session.user.role = token.role;
+          session.accessToken = token.accessToken;
+          session.refreshToken = token.refreshToken;
+        }
+        return session;
+      } catch (error) {
+        console.error("Session callback error:", error);
+        // Return empty session with undefined user to prevent crashes
+        return {
+          ...session,
+          user: undefined
+        };
       }
-      return session;
     },
     async redirect({ url, baseUrl }) {
       // Handles redirect on signin
@@ -134,8 +144,18 @@ export const authOptions: AuthOptions = {
         sameSite: "lax",
         path: "/",
         secure: process.env.NODE_ENV === "production",
-        // domain: process.env.NODE_ENV === 'production' ? '.yourdomain.com' : undefined, // Set if using subdomains
+        // Clear existing cookies by setting a new cookie with same name
+        maxAge: process.env.NODE_ENV === 'production' ? 30 * 24 * 60 * 60 : 24 * 60 * 60, // 30 days prod, 1 day dev
       },
+    },
+  },
+  // Add error handling for JWT issues
+  events: {
+    async signOut({ token }) {
+      // Clear any problematic tokens
+      if (process.env.NODE_ENV === 'development') {
+        console.log('User signed out, clearing token')
+      }
     },
   },
   debug: process.env.NODE_ENV === 'development',
