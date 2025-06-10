@@ -238,20 +238,25 @@ model File {
 }
 
 model Contract {
-  id           String   @id @default(uuid()) @db.Uuid
-  leadId       String   @db.VarChar(255)
-  contractType String
-  signatures   Json
-  dates        Json
-  names        Json
-  addresses    Json
-  contactInfo  Json
-  pdfUrl       String?
-  createdAt    DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt    DateTime @updatedAt @db.Timestamptz(6)
-  lead         Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  id                String    @id @default(uuid()) @db.Uuid
+  leadId            String    @db.VarChar(255)
+  contractType      String
+  signatures        Json
+  dates             Json
+  names             Json
+  addresses         Json
+  contactInfo       Json
+  pdfUrl            String?
+  googleDriveFileId String?   // Google Drive file ID
+  googleDriveLink   String?   // View link
+  uploadedAt        DateTime? // When uploaded to Drive
+  fileName          String?   // Original filename
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+  lead              Lead      @relation(fields: [leadId], references: [id], onDelete: Cascade)
 
   @@index([leadId])
+  @@index([googleDriveFileId])
 }
 
 model RoutePoint {
@@ -286,6 +291,16 @@ model LeadPhoto {
   @@index([uploadedById])
   @@index([createdAt])
   @@index([updatedAt])
+}
+
+model ApiClient {
+  id           String   @id
+  name         String   @unique
+  clientId     String   @unique
+  clientSecret String
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt    DateTime @default(now()) @db.Timestamptz(6)
 }
 
 enum UserRole {
