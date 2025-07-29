@@ -3,13 +3,14 @@
 import React, { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { FileIcon, CheckCircle, Edit3Icon } from "lucide-react"
+import { FileIcon, CheckCircle, Edit3Icon, Mail } from "lucide-react"
 import Link from "next/link"
 import { Label } from "@/components/ui/label"
 import LoadingAnimation from "./loading-animation"
 import Image from "next/image"
 import AdoptSignatureDialog from "./adopt-signature-dialog"
 import { useLeadData } from "@/hooks/useLeadData"
+import SendContractDialog from "./send-contract-dialog"
 
 export default function WarrantyContract() {
   const lead = useLeadData()
@@ -27,8 +28,11 @@ export default function WarrantyContract() {
     date: formatDate(),
     agreesDate: formatDate(),
     projectAddress: lead?.address || "",
+    firstName: lead?.firstName || "",
+    lastName: lead?.lastName || "",
     dateOfCompletion: "",
-    authorizedRepresentativeSignatureDate: formatDate(),
+    signature: "",
+    signatureDate: formatDate(),
   }))
 
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
@@ -39,12 +43,17 @@ export default function WarrantyContract() {
   // State to control the AdoptSignatureDialog visibility
   const [isAdoptSignatureDialogOpen, setIsAdoptSignatureDialogOpen] = useState(false)
 
+  const [isSendDialogOpen, setIsSendDialogOpen] = useState(false)
+  const [emailSent, setEmailSent] = useState(false)
+
   // Effect to update form data when lead data is available
   useEffect(() => {
     if (lead) {
       setFormData(prev => ({
         ...prev,
         projectAddress: lead.address || "",
+        firstName: lead.firstName || "",
+        lastName: lead.lastName || "",
       }))
     }
   }, [lead])
@@ -55,7 +64,7 @@ export default function WarrantyContract() {
       ...prev,
       date: currentDate,
       agreesDate: currentDate,
-      authorizedRepresentativeSignatureDate: currentDate,
+      signatureDate: currentDate,
     }))
   }, [])
 
@@ -149,6 +158,21 @@ export default function WarrantyContract() {
           </div>
         </div>
 
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px;">
+          <div>
+            <strong>First Name:</strong><br>
+            <span style="border-bottom: 1px solid #000; display: inline-block; min-width: 200px; padding-bottom: 2px;">
+              ${formData.firstName || ""}
+            </span>
+          </div>
+          <div>
+            <strong>Last Name:</strong><br>
+            <span style="border-bottom: 1px solid #000; display: inline-block; min-width: 200px; padding-bottom: 2px;">
+              ${formData.lastName || ""}
+            </span>
+          </div>
+        </div>
+
         <div style="margin-bottom: 20px;">
           <h3 style="font-size: 16px; font-weight: bold; margin: 0 0 10px 0;">1. WARRANTY COVERAGE</h3>
           <p style="margin: 0 0 15px 0;">
@@ -216,11 +240,11 @@ export default function WarrantyContract() {
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 50px; border-top: 1px solid #ccc; padding-top: 30px;">
           <div>
-            <strong>Authorized Representative:</strong><br>
+            <strong>Signature:</strong><br>
             <div style="border: 1px solid #000; height: 80px; width: 100%; margin-top: 10px; display: flex; align-items: center; justify-content: center; background: #fff;">
               ${
-                formData.authorizedRepresentativeSignature
-                  ? `<img src="${formData.authorizedRepresentativeSignature}" style="max-height: 70px; max-width: 100%; object-fit: contain;" />`
+                formData.signature
+                  ? `<img src="${formData.signature}" style="max-height: 70px; max-width: 100%; object-fit: contain;" />`
                   : '<span style="color: #999;">Signature Required</span>'
               }
             </div>
@@ -228,7 +252,7 @@ export default function WarrantyContract() {
           <div>
             <strong>Date:</strong><br>
             <span style="border-bottom: 1px solid #000; display: inline-block; min-width: 150px; padding-bottom: 2px; margin-top: 10px;">
-              ${formData.authorizedRepresentativeSignatureDate || ""}
+              ${formData.signatureDate || ""}
             </span>
           </div>
         </div>
@@ -291,6 +315,43 @@ export default function WarrantyContract() {
     }
   }
 
+  const handleSendContract = async (data: {
+    recipientEmail: string
+    recipientName: string
+    personalMessage: string
+  }) => {
+    if (!lead?.id) {
+      console.error("Cannot send contract without a lead.")
+      // Optionally, show a toast or alert to the user
+      return
+    }
+
+    try {
+      const response = await fetch('/api/contracts/warranty/send-for-signature', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          recipientEmail: data.recipientEmail,
+          recipientName: data.recipientName,
+          personalMessage: data.personalMessage,
+          contractData: formData,
+          leadId: lead.id,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to send contract for signature')
+      }
+
+      setEmailSent(true)
+    } catch (error) {
+      console.error('Error sending contract for signature:', error)
+      throw error // Re-throw to let dialog handle the error
+    }
+  }
+
   return (
     <div className="max-w-4xl mx-auto bg-white p-6 shadow-lg">
       {isGeneratingPdf && <LoadingAnimation message="Generating warranty PDF..." />}
@@ -299,10 +360,34 @@ export default function WarrantyContract() {
         <Link href="/">
           <Button variant="outline">Back to Home</Button>
         </Link>
-        <Button onClick={handleGeneratePdf} disabled={isGeneratingPdf} className="flex items-center gap-2">
-          <FileIcon className="h-4 w-4" />
-          {isGeneratingPdf ? "Generating PDF..." : "Generate PDF"}
-        </Button>
+        <div className="flex gap-4">
+          {!hasSetupSignature && (
+            <Button
+              variant="outline"
+              onClick={() => setIsAdoptSignatureDialogOpen(true)}
+            >
+              <Edit3Icon className="w-4 h-4 mr-2" />
+              Setup Signature
+            </Button>
+          )}
+          
+          <Button
+            onClick={() => setIsSendDialogOpen(true)}
+            disabled={emailSent}
+            className="gap-2"
+          >
+            <Mail className="w-4 h-4" />
+            {emailSent ? 'Email Sent' : 'Send for E-Signature'}
+          </Button>
+
+          <Button
+            onClick={handleGeneratePdf}
+            disabled={isGeneratingPdf}
+          >
+            <FileIcon className="w-4 h-4 mr-2" />
+            {isGeneratingPdf ? "Generating..." : "Generate PDF"}
+          </Button>
+        </div>
       </div>
 
       {/* Button to open the AdoptSignatureDialog */}
@@ -340,6 +425,15 @@ export default function WarrantyContract() {
         // initialInitials is not needed here
         title="Adopt Your Signature"
         needsInitials={false} // Explicitly set to false
+      />
+
+      <SendContractDialog
+        open={isSendDialogOpen}
+        onOpenChange={setIsSendDialogOpen}
+        onSend={handleSendContract}
+        contractType="Warranty Contract"
+        defaultEmail={lead?.email || ""}
+        defaultName={lead ? `${lead.firstName || ''} ${lead.lastName || ''}`.trim() : ""}
       />
 
       <div ref={contractRef} className="space-y-6 text-sm">
@@ -383,6 +477,35 @@ export default function WarrantyContract() {
               onChange={(e) => handleInputChange("dateOfCompletion", e.target.value)}
               className="mt-1 border-0 border-b-2 border-gray-400 rounded-none focus:border-blue-500 focus:ring-0"
               placeholder="MM/DD/YYYY"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <div>
+            <Label htmlFor="firstName" className="font-semibold">
+              First Name:
+            </Label>
+            <Input
+              id="firstName"
+              type="text"
+              value={formData.firstName || ""}
+              onChange={(e) => handleInputChange("firstName", e.target.value)}
+              className="mt-1 border-0 border-b-2 border-gray-400 rounded-none focus:border-blue-500 focus:ring-0"
+              placeholder="Enter first name"
+            />
+          </div>
+          <div>
+            <Label htmlFor="lastName" className="font-semibold">
+              Last Name:
+            </Label>
+            <Input
+              id="lastName"
+              type="text"
+              value={formData.lastName || ""}
+              onChange={(e) => handleInputChange("lastName", e.target.value)}
+              className="mt-1 border-0 border-b-2 border-gray-400 rounded-none focus:border-blue-500 focus:ring-0"
+              placeholder="Enter last name"
             />
           </div>
         </div>
@@ -456,24 +579,24 @@ export default function WarrantyContract() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12 pt-8 border-t">
           <div>
-            <Label className="font-semibold">Authorized Representative:</Label>
+            <Label className="font-semibold">Signature:</Label>
             <div className="mt-2">
-              {formData.authorizedRepresentativeSignature ? (
+              {formData.signature ? (
                 <div className="border-2 border-gray-300 h-20 w-full p-2">
                   <img
-                    src={formData.authorizedRepresentativeSignature || "/placeholder.svg"}
+                    src={formData.signature || "/placeholder.svg"}
                     alt="Signature"
                     className="h-full w-full object-contain"
                   />
                 </div>
               ) : (
                 <div
-                  onClick={() => applySignature("authorizedRepresentativeSignature")}
+                  onClick={() => applySignature("signature")}
                   className="border-2 border-dashed border-gray-400 h-20 w-full cursor-pointer flex items-center justify-center text-gray-500 hover:border-blue-500 hover:text-blue-500"
                   role="button"
                   tabIndex={0}
                   onKeyPress={(e) => {
-                    if (e.key === "Enter" || e.key === " ") applySignature("authorizedRepresentativeSignature")
+                    if (e.key === "Enter" || e.key === " ") applySignature("signature")
                   }}
                 >
                   {masterSignature ? "Click to apply signature" : "Setup signature first"}
@@ -488,8 +611,8 @@ export default function WarrantyContract() {
             <Input
               id="signatureDate"
               type="text"
-              value={formData.authorizedRepresentativeSignatureDate || ""}
-              onChange={(e) => handleInputChange("authorizedRepresentativeSignatureDate", e.target.value)}
+              value={formData.signatureDate || ""}
+              onChange={(e) => handleInputChange("signatureDate", e.target.value)}
               className="mt-2 border-0 border-b-2 border-gray-400 rounded-none focus:border-blue-500 focus:ring-0"
               placeholder="MM/DD/YYYY"
             />
